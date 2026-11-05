@@ -115,8 +115,14 @@ function fieldNameFallback(fields: Set<string>) {
       );
     };
   } else if (fields.has('Time') || fields.has('time')) {
+    // Legacy frames may name their time field differently in case ("Time" vs "time"), so match
+    // time fields whose name equals one of the requested names ignoring case. Other time fields
+    // (e.g. a second "created" time column) must not be swept up by the fallback.
+    const lowerNames = new Set([...fields].map((n) => n.toLowerCase()));
     fallback = (field: Field, frame: DataFrame) => {
-      return frame.meta?.typeVersion == null && field.type === FieldType.time;
+      return (
+        frame.meta?.typeVersion == null && field.type === FieldType.time && lowerNames.has(field.name.toLowerCase())
+      );
     };
   }
 
